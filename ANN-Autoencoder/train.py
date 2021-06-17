@@ -9,8 +9,11 @@ import matplotlib.pyplot as plt
 import h5py as h5
 from sklearn.preprocessing import MinMaxScaler
 from gwpy.timeseries import TimeSeries
-from keras.callbacks import EarlyStopping, ModelCheckpoint
-from model import autoencoder_LSTM, autoencoder_ConvLSTM, autoencoder_ConvDNN, autoencoder_DNN, autoencoder_Conv, autoencoder_Conv2
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from model import autoencoder_LSTM, autoencoder_ConvLSTM, autoencoder_ConvDNN, autoencoder_DNN, autoencoder_Conv, autoencoder_Conv2, autoencoder_LSTM_attention
+import tensorflow as tf
+
+os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
 
 sns.set(color_codes=True)
 
@@ -44,7 +47,7 @@ def main(args):
     os.system(f'mkdir {outdir}')
 
     # Load train and test data
-    load = h5.File('../../dataset/default_simulated.hdf', 'r')
+    load = h5.File('../../dataset/default_BIGsim_testtrain_H1.h5', 'r')
 
     # Define frequency in Hz instead of KHz
     if int(freq) == 2:
@@ -70,7 +73,7 @@ def main(args):
     scaler_filename = f"{outdir}/scaler_data_{detector}"
     joblib.dump(scaler, scaler_filename)
     '''
-    X_train = np.load('train_preprocessed_160k.npy')[:80000]
+    X_train = load['noise'][:300000, :16000]
     # Data augmentation needed if not enough data
     # X_train = augmentation(X_train, timesteps)
 
@@ -87,16 +90,19 @@ def main(args):
     X_train = X_train.reshape(-1, timesteps, 1)
     print("Training data shape:", X_train.shape)
 
+    strategy = tf.distribute.MirroredStrategy()
     # Define the model
-    model = autoencoder_LSTM(X_train)
+    model = autoencoder_LSTM_attention(X_train)
     model.compile(optimizer='adam', loss='mse')
     model.summary()
 
+    
     # Fit the model to the data
     nb_epochs = 300
     batch_size = 1024
-    early_stop = EarlyStopping(monitor='val_loss', patience=10, verbose=0, mode='min')
+    early_stop = EarlyStopping(monitor='val_loss', patience=3, verbose=0, mode='min')
     mcp_save = ModelCheckpoint(f'{outdir}/best_model.hdf5', save_best_only=True, monitor='val_loss', mode='min')
+
     history = model.fit(X_train, X_train, epochs=nb_epochs, batch_size=batch_size,
                         validation_split=0.2, callbacks=[early_stop, mcp_save]).history
     model.save(f'{outdir}/last_model.hdf5')

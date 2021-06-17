@@ -1,50 +1,62 @@
 """ Set of autoencoders models used for anomaly detection. """
 
-from keras.layers import Input, Dense, LSTM, TimeDistributed, RepeatVector, Conv1D, \
-    MaxPooling1D, UpSampling1D, Flatten, Reshape
-from keras.models import Model
-from keras import regularizers
+from tensorflow.keras.layers import Input, Dense, LSTM, TimeDistributed, RepeatVector, Conv1D, \
+    MaxPooling1D, UpSampling1D, Flatten, Reshape, Attention
+from tensorflow.keras.models import Model
+from tensorflow.keras import regularizers
 
 def autoencoder_LSTM(X):
     inputs = Input(shape=(X.shape[1], X.shape[2]))
-    L1 = LSTM(32, activation='relu', return_sequences=True, 
+    L1 = LSTM(32, return_sequences=True, 
               kernel_regularizer=regularizers.l2(0.00))(inputs)
-    L2 = LSTM(8, activation='relu', return_sequences=False)(L1)
+    L2 = LSTM(8, return_sequences=False)(L1)
     L3 = RepeatVector(X.shape[1])(L2)
-    L4 = LSTM(8, activation='relu', return_sequences=True)(L3)
-    L5 = LSTM(32, activation='relu', return_sequences=True)(L4)
+    L4 = LSTM(8, return_sequences=True)(L3)
+    L5 = LSTM(32, return_sequences=True)(L4)
     output = TimeDistributed(Dense(X.shape[2]))(L5)    
     model = Model(inputs=inputs, outputs=output)
     return model
 
+def autoencoder_LSTM_attention(X):
+    inputs = Input(shape=(X.shape[1], X.shape[2]))
+    encoder_stack, L1, state_c = LSTM(32, return_sequences=True, return_state=True,
+              kernel_regularizer=regularizers.l2(0.00))(inputs)
+    L2 = RepeatVector(X.shape[1])(L1)
+    L3 = LSTM(32, return_sequences=True)(L2)
+    L4 = Attention()([L3, encoder_stack])
+    output = TimeDistributed(Dense(X.shape[2]))(L4)
+    model = Model(inputs=inputs, outputs=output)
+    return model
+
+
 def autoencoder_GRU(X):
     inputs = Input(shape=(X.shape[1], X.shape[2]))
-    L1 = GRU(32, activation='relu', return_sequences=True, 
+    L1 = GRU(32, return_sequences=True, 
               kernel_regularizer=regularizers.l2(0.00))(inputs)
-    L2 = GRU(8, activation='relu', return_sequences=False)(L1)
+    L2 = GRU(8, return_sequences=False)(L1)
     L3 = RepeatVector(X.shape[1])(L2)
-    L4 = GRU(8, activation='relu', return_sequences=True)(L3)
-    L5 = GRU(32, activation='relu', return_sequences=True)(L4)
+    L4 = GRU(8, return_sequences=True)(L3)
+    L5 = GRU(32, return_sequences=True)(L4)
     output = TimeDistributed(Dense(X.shape[2]))(L5)    
     model = Model(inputs=inputs, outputs=output)
     return model
 
 def autoencoder_Conv(X):
     inputs = Input(shape=(X.shape[1], X.shape[2]))
-    L1 = Conv1D(16, 3, activation="relu", padding="same")(inputs) # 10 dims
+    L1 = Conv1D(16, 3, padding="same")(inputs) # 10 dims
     #x = BatchNormalization()(x)
     L2 = MaxPooling1D(4, padding="same")(L1) # 5 dims
-    L3 = Conv1D(10, 3, activation="relu", padding="same")(L2) # 5 dims
+    L3 = Conv1D(10, 3, padding="same")(L2) # 5 dims
     #x = BatchNormalization()(x)
     encoded = MaxPooling1D(4, padding="same")(L3) # 3 dims
     # 3 dimensions in the encoded layer
-    L4 = Conv1D(10, 3, activation="relu", padding="same")(encoded) # 3 dims
+    L4 = Conv1D(10, 3, padding="same")(encoded) # 3 dims
     #x = BatchNormalization()(x)
     L5 = UpSampling1D(4)(L4) # 6 dims
-    L6 = Conv1D(16, 2, activation='relu')(L5) # 5 dims
+    L6 = Conv1D(16, 2)(L5) # 5 dims
     #x = BatchNormalization()(x)
     L7 = UpSampling1D(4)(L6) # 10 dims
-    output = Conv1D(1, 3, activation='sigmoid', padding='same')(L7) # 10 dims
+    output = Conv1D(1, 3, padding='same')(L7) # 10 dims
     model = Model(inputs=inputs, outputs = output)
     return model 
 
