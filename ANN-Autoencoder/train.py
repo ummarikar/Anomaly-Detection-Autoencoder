@@ -93,15 +93,15 @@ def main(args):
     strategy = tf.distribute.MirroredStrategy()
     # Define the model
     model = autoencoder_LSTM_attention(X_train)
-    model.compile(optimizer='adam', loss='mse')
+    model.compile(optimizer='sgd', loss=tf.keras.losses.BinaryCrossentropy(), metrics=[tf.keras.metrics.AUC()])
     model.summary()
 
     
     # Fit the model to the data
     nb_epochs = 300
     batch_size = 1024
-    early_stop = EarlyStopping(monitor='val_loss', patience=3, verbose=0, mode='min')
-    mcp_save = ModelCheckpoint(f'{outdir}/best_model.hdf5', save_best_only=True, monitor='val_loss', mode='min')
+    early_stop = EarlyStopping(monitor='val_auc', patience=3, verbose=0, mode='min')
+    mcp_save = ModelCheckpoint(f'{outdir}/best_model.hdf5', save_best_only=True, monitor='val_auc', mode='min')
 
     history = model.fit(X_train, X_train, epochs=nb_epochs, batch_size=batch_size,
                         validation_split=0.2, callbacks=[early_stop, mcp_save]).history

@@ -255,6 +255,7 @@ def main(args):
     timesteps = [100]
     FPR_set = []
     TPR_set = []
+    AUC_set = []
     
     for name, directory, timestep in zip(names, directory_list, timesteps): 
         print('Determining performance for: %s'%(name))
@@ -266,6 +267,7 @@ def main(args):
             TPR, FPR = TPR_FPR_arrays(X_train_H1, X_test_H1, directory, timestep, len(X_test_H1))
         TPR_set.append(TPR)
         FPR_set.append(FPR)
+        AUC_set.append(auc(FPR, TPR))
 
         TPR_FPR = [FPR, TPR]
         #print(TPR_FPR)
@@ -273,7 +275,8 @@ def main(args):
         np.save(f"{outdir}/{name}_TPR_FPR",TPR_FPR)
         print('Done!')
     
-
+    for i in range(0, len(AUC_set)):
+        print(directory_list[i], 'AUC score:', AUC_set[i])
     
     plt.figure()
     lw = 2
