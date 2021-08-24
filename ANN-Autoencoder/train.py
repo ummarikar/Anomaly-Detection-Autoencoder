@@ -8,7 +8,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import h5py as h5
 from sklearn.preprocessing import MinMaxScaler
-from gwpy.timeseries import TimeSeries
+#from gwpy.timeseries import TimeSeries
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
 from model import autoencoder_LSTM, autoencoder_ConvLSTM, autoencoder_ConvDNN, autoencoder_DNN, autoencoder_Conv, autoencoder_Conv2, autoencoder_LSTM_attention
 import tensorflow as tf
@@ -73,7 +73,7 @@ def main(args):
     scaler_filename = f"{outdir}/scaler_data_{detector}"
     joblib.dump(scaler, scaler_filename)
     '''
-    X_train = load['noise'][:300000, :16000]
+    X_train = load['noise'][:300000, :16092]
     # Data augmentation needed if not enough data
     # X_train = augmentation(X_train, timesteps)
 
@@ -93,15 +93,15 @@ def main(args):
     strategy = tf.distribute.MirroredStrategy()
     # Define the model
     model = autoencoder_LSTM_attention(X_train)
-    model.compile(optimizer='sgd', loss=tf.keras.losses.BinaryCrossentropy(), metrics=[tf.keras.metrics.AUC()])
+    model.compile(optimizer='adam', loss='mse')
     model.summary()
 
     
     # Fit the model to the data
-    nb_epochs = 300
+    nb_epochs = 1
     batch_size = 1024
-    early_stop = EarlyStopping(monitor='val_auc', patience=3, verbose=0, mode='min')
-    mcp_save = ModelCheckpoint(f'{outdir}/best_model.hdf5', save_best_only=True, monitor='val_auc', mode='min')
+    early_stop = EarlyStopping(monitor='val_loss', patience=3, verbose=0, mode='min')
+    mcp_save = ModelCheckpoint(f'{outdir}/best_model.hdf5', save_best_only=True, monitor='val_loss', mode='min')
 
     history = model.fit(X_train, X_train, epochs=nb_epochs, batch_size=batch_size,
                         validation_split=0.2, callbacks=[early_stop, mcp_save]).history

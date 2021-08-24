@@ -241,7 +241,7 @@ def main(args):
 #    directory_list = ['all_lstm_tanh_epoch01']
 #    directory_list = ['all_lstm_tanh_epoch02']
 #    directory_list = ['all_lstm_tanh_epoch03']
-    directory_list = ['attention']
+    directory_list = ['attention_hls']
     #directory_list = ['temp_qkeras']
    # directory_list = ['temp_gpu_tanh']
 #    directory_list = ['temp']

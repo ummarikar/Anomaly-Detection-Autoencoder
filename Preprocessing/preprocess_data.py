@@ -36,22 +36,19 @@ def main(args):
     os.system('mkdir -p %s'%outdir)
     
     # Load train 
-    load_1 = h5.File('../../dataset/default_simulated_big_1.hdf', 'r')
-    load_2 = h5.File('../../dataset/default_simulated_big_2.hdf', 'r')
-    load_3 = h5.File('../../dataset/default_simulated_big_3.hdf', 'r')
+    load_1 = h5.File('../../dataset/default_BIGsim_testtrain_H1.h5', 'r')
     
     datapoints = 40000
-    noise_samples_1 = load_1['noise_samples']['%s_strain'%(str(detector).lower())][:datapoints]
-    injection_samples_1 = load_1['injection_samples']['%s_strain'%(str(detector).lower())][:datapoints]
-    noise_samples_2 = load_2['noise_samples']['%s_strain'%(str(detector).lower())][:datapoints]
-    injection_samples_2 = load_2['injection_samples']['%s_strain'%(str(detector).lower())][:datapoints]
-    noise_samples_3 = load_3['noise_samples']['%s_strain'%(str(detector).lower())][:int(datapoints)]
-    injection_samples_3 = load_3['injection_samples']['%s_strain'%(str(detector).lower())][:int(datapoints)]
-    del load_1, load_2, load_3
-    data = np.concatenate((injection_samples_1, injection_samples_2, injection_samples_3, noise_samples_1, noise_samples_2 ,noise_samples_3))
-    truth = np.concatenate((np.ones(int(datapoints*3)), np.zeros(int(datapoints*3))))
+    noise_samples_1 = load_1['noise'][:300000, :16000][:datapoints]
+    #injection_samples_1 = load_1['injection_samples']['%s_strain'%(str(detector).lower())][:datapoints]
+    #noise_samples_2 = load_2['noise_samples']['%s_strain'%(str(detector).lower())][:datapoints]
+    #injection_samples_2 = load_2['injection_samples']['%s_strain'%(str(detector).lower())][:datapoints]
+    #noise_samples_3 = load_3['noise_samples']['%s_strain'%(str(detector).lower())][:int(datapoints)]
+    #injection_samples_3 = load_3['injection_samples']['%s_strain'%(str(detector).lower())][:int(datapoints)]
+    del load_1
+    data = np.concatenate((noise_samples_1))
 
-    del noise_samples_1, noise_samples_2 ,noise_samples_3, injection_samples_1, injection_samples_2, injection_samples_3
+    del noise_samples_1
     
     # Definining frequency in Hz instead of KHz
     if int(freq) == 2: 
@@ -76,7 +73,6 @@ def main(args):
     
     hf = h5.File('%s/%s.h5'%(outdir, filename), 'w')
     hf.create_dataset('data', data=X_transformed)
-    hf.create_dataset('truth', data=truth)
     hf.close()
     
 

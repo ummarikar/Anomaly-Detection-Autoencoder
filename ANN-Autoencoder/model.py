@@ -1,7 +1,7 @@
 """ Set of autoencoders models used for anomaly detection. """
 
 from tensorflow.keras.layers import Input, Dense, LSTM, TimeDistributed, RepeatVector, Conv1D, \
-    MaxPooling1D, UpSampling1D, Flatten, Reshape, Attention
+    MaxPooling1D, UpSampling1D, Flatten, Reshape, Attention, Concatenate
 from tensorflow.keras.models import Model
 from tensorflow.keras import regularizers
 
@@ -24,7 +24,8 @@ def autoencoder_LSTM_attention(X):
     L2 = RepeatVector(X.shape[1])(L1)
     L3 = LSTM(32, return_sequences=True)(L2)
     L4 = Attention()([L3, encoder_stack])
-    output = TimeDistributed(Dense(X.shape[2]))(L4)
+    L5 = Concatenate()([L3, L4])
+    output = TimeDistributed(Dense(X.shape[2], activation='tanh'))(L5)
     model = Model(inputs=inputs, outputs=output)
     return model
 
