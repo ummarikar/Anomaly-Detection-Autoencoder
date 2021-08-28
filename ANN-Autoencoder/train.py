@@ -10,7 +10,7 @@ import h5py as h5
 from sklearn.preprocessing import MinMaxScaler
 #from gwpy.timeseries import TimeSeries
 from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
-from model import autoencoder_LSTM, autoencoder_ConvLSTM, autoencoder_ConvDNN, autoencoder_DNN, autoencoder_Conv, autoencoder_Conv2, autoencoder_LSTM_attention
+from model import autoencoder_LSTM, autoencoder_ConvLSTM, autoencoder_ConvDNN, autoencoder_DNN, autoencoder_Conv, autoencoder_Conv2, autoencoder_LSTM_attention, autoencoder_GRU
 import tensorflow as tf
 
 os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
@@ -90,9 +90,8 @@ def main(args):
     X_train = X_train.reshape(-1, timesteps, 1)
     print("Training data shape:", X_train.shape)
 
-    strategy = tf.distribute.MirroredStrategy()
     # Define the model
-    model = autoencoder_LSTM_attention(X_train)
+    model = autoencoder_GRU(X_train)
     model.compile(optimizer='adam', loss='mse')
     model.summary()
 
