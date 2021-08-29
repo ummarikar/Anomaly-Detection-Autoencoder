@@ -29,7 +29,7 @@ def TPR_FPR_arrays(noise_array, injection_array, model_outdir, steps, num_events
     # load the autoencoder network model
     #model = load_model('%s/best_model.hdf5'%(model_outdir))
     #model = load_model('%s/best_model_H1.hdf5'%(model_outdir))
-    model = load_model('%s/best_model.hdf5'%(model_outdir))
+    model = load_model(model_outdir)
         
     '''
     x = []
@@ -241,18 +241,18 @@ def main(args):
 #    directory_list = ['all_lstm_tanh_epoch01']
 #    directory_list = ['all_lstm_tanh_epoch02']
 #    directory_list = ['all_lstm_tanh_epoch03']
-    directory_list = ['attention_hls', 'lstm_autoencoder', 'gru_autoencoder']
+    directory_list = ['./attention_epochs/epoch_1.hdf5', './attention_epochs/epoch_2.hdf5', './attention_epochs/epoch_3.hdf5', './attention_epochs/epoch_4.hdf5', './attention_epochs/last_model.hdf5']
     #directory_list = ['temp_qkeras']
    # directory_list = ['temp_gpu_tanh']
 #    directory_list = ['temp']
     #names = ['DNN Autoencoder', 'CNN-DNN Autoencoder']#, 'LSTM Autoencoder']
-    names = ['Attention Autoencoder', 'LSTM Autoencoder', 'GRU Autoencoder']
+    names = ['Epoch 1', 'Epoch 2', 'Epoch 3', 'Epoch 4', 'Epoch 5']
 
     #names = ['DNN Autoencoder']
     #names = ['CNN Autoencoder']
     #names = ['GRU Autoencoder']
     #timesteps = [100, 108, 100]
-    timesteps = [100, 100, 100]
+    timesteps = [100, 100, 100, 100, 100]
     FPR_set = []
     TPR_set = []
     AUC_set = []
