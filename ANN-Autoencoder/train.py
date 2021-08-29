@@ -9,13 +9,22 @@ import matplotlib.pyplot as plt
 import h5py as h5
 from sklearn.preprocessing import MinMaxScaler
 #from gwpy.timeseries import TimeSeries
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint, Callback
 from model import autoencoder_LSTM, autoencoder_ConvLSTM, autoencoder_ConvDNN, autoencoder_DNN, autoencoder_Conv, autoencoder_Conv2, autoencoder_LSTM_attention, autoencoder_GRU
 import tensorflow as tf
 
 os.environ["CUDA_VISIBLE_DEVICES"]="0,1"
 
 sns.set(color_codes=True)
+
+class CustomCheckpoint(Callback):
+
+    def __init__(self, directory):
+        super().__init__()
+        self.directory = directory
+
+    def on_epoch_begin(self, epoch, logs=None):
+    	self.model.save(f'{self.directory}/epoch_{epoch}.hdf5')
 
 def filters(array, sample_frequency):
     """ Apply preprocessing such as whitening and bandpass """
@@ -91,16 +100,16 @@ def main(args):
     print("Training data shape:", X_train.shape)
 
     # Define the model
-    model = autoencoder_GRU(X_train)
+    model = autoencoder_LSTM_attention(X_train)
     model.compile(optimizer='adam', loss='mse')
     model.summary()
 
     
     # Fit the model to the data
-    nb_epochs = 1
+    nb_epochs = 5
     batch_size = 1024
     early_stop = EarlyStopping(monitor='val_loss', patience=3, verbose=0, mode='min')
-    mcp_save = ModelCheckpoint(f'{outdir}/best_model.hdf5', save_best_only=True, monitor='val_loss', mode='min')
+    mcp_save = CustomCheckpoint(f'{outdir}')
 
     history = model.fit(X_train, X_train, epochs=nb_epochs, batch_size=batch_size,
                         validation_split=0.2, callbacks=[early_stop, mcp_save]).history
