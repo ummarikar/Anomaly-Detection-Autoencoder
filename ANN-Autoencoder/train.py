@@ -100,7 +100,7 @@ def main(args):
     print("Training data shape:", X_train.shape)
 
     # Define the model
-    model = autoencoder_LSTM_attention(X_train)
+    model = autoencoder_LSTM(X_train)
     model.compile(optimizer='adam', loss='mse')
     model.summary()
 
